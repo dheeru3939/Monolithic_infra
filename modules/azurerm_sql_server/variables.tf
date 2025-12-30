@@ -1,13 +1,12 @@
-# variable "sql_server" {
-#  type = map(object({
-#    name                         = "mssqlserver"
-#   resource_group_name          = azurerm_resource_group.example.name
-#   location                     = azurerm_resource_group.example.location
-#   version                      = "12.0"
-#   administrator_login          = "missadministrator"
-#   administrator_login_password = "thisIsKat11"
-#   minimum_tls_version          = "1.2"
+variable "sql_server" {
+ type = map(object({
+   name                         = string
+  resource_group_name          = string
+  location                     = string
+  version                      = string
+  administrator_login          = string
+  administrator_login_password = string
 
-#  }))
-# }
+ }))
+}
 
