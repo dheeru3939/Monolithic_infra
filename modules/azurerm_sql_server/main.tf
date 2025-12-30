@@ -1,15 +1,23 @@
 # resource "azurerm_mssql_server" "mysql" {
 #     for_each = var.sql_server
-#   name                         = "mssqlserver"
-#   resource_group_name          = azurerm_resource_group.example.name
-#   location                     = azurerm_resource_group.example.location
+#   name                         = each.value.name
+#   resource_group_name          = each.value.resource_group_name
+#   location                     = each.value.location
 #   version                      = "12.0"
-#   administrator_login          = "missadministrator"
-#   administrator_login_password = "thisIsKat11"
-#   minimum_tls_version          = "1.2"
+#   administrator_login          = each.value.ad
+#   administrator_login_password = each.value.administrator_login_password
 
-#   azuread_administrator {
-#     login_username = "AzureAD Admin"
-#     object_id      = "00000000-0000-0000-0000-000000000000"
+
 #   }
-#   }
+
+resource "azurerm_mssql_server" "mysql" {
+  for_each = var.sql_server
+
+  name                         = each.value.name
+  resource_group_name          = each.value.resource_group_name
+  location                     = each.value.location
+  version                      = each.value.version
+  administrator_login          = each.value.administrator_login
+  administrator_login_password = each.value.administrator_login_password
+}
+

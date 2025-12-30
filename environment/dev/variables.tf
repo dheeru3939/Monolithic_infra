@@ -70,3 +70,28 @@ variable "key_vaults" {
 
 }
 
+variable "sql_server" {
+  type = map(object({
+    name                         = string
+    resource_group_name          = string
+    location                     = string
+    version                      = string
+    administrator_login          = string
+    administrator_login_password = string
+
+  }))
+}
+
+variable "sql_database" {
+  type = map(object({
+    name           = string
+    sql_server_key = string
+    collation      = string
+    max_size_gb    = number
+    sku_name       = string
+
+    short_term_retention_policy = optional(object({
+      retention_days = number
+    }))
+  }))
+}
