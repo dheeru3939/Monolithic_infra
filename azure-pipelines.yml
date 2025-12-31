@@ -1,0 +1,136 @@
+trigger:
+  - main
+  - feature/*
+
+pool:
+  name: Agent-monolithic-infra
+
+variables:
+  TF_WORKING_DIR: '$(System.DefaultWorkingDirectory)/environment/dev'
+
+# ---------------- BUILD ----------------
+stages:
+- stage: Build
+  displayName: Build
+  jobs:
+  - job: TerraformInitValidateplan
+    displayName: Terraform Init Validate Plan
+    steps:
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: 'latest'
+
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: azurerm
+        command: init
+        workingDirectory: $(TF_WORKING_DIR)
+        backendServiceArm: Monolithic-serviceconnection01
+        backendAzureRmResourceGroupName: home1239
+        backendAzureRmStorageAccountName: homestg1239
+        backendAzureRmContainerName: hello
+        backendAzureRmKey: new.terraform.tfstate
+
+    - task: TerraformTask@5
+      displayName: Terraform Validate
+      inputs:
+        provider: azurerm
+        command: validate
+        workingDirectory: $(TF_WORKING_DIR)
+
+    - task: TerraformTask@5
+      displayName: Terraform Plan
+      inputs:
+        provider: azurerm
+        command: plan
+        workingDirectory: $(TF_WORKING_DIR)
+        environmentServiceNameAzureRM: Monolithic-serviceconnection01
+        commandOptions: '-out=tfplan -refresh=false -parallelism=20 -var-file=terraform.tfvars'
+
+# ---------------- SCANNING ----------------
+- stage: Scanning
+  displayName: Security Scanning
+  dependsOn: Build
+  jobs:
+  - job: Scanning
+    steps:
+    - powershell: |
+        cd $(TF_WORKING_DIR)
+        tflint --init
+        tflint
+      displayName: Run TFLint
+
+    - task: tfsec@1
+      displayName: Run tfsec
+      inputs:
+        version: v1.26.0
+
+# ---------------- FINOPS (Infracost) ----------------
+- stage: FinOps
+  displayName: FinOps Cost Estimation
+  dependsOn: Scanning
+  jobs:
+  - job: Infracost
+    steps:
+    - powershell: |
+        cd $(TF_WORKING_DIR)
+        infracost breakdown `
+          --path . `
+          --format table
+      displayName: Infracost Breakdown
+      env:
+        INFRACOST_API_KEY: $(INFRACOST_API_KEY)
+
+# ---------------- MANUAL APPROVAL ----------------
+- stage: ManualApproval
+  displayName: Manual Validation
+  dependsOn: FinOps
+  jobs:
+  - job: Approval
+    pool: server
+    steps:
+    - task: ManualValidation@0
+      inputs:
+        instructions: |
+          Please review:
+          - Terraform Plan
+          - Security Scan
+          - Infracost output
+          
+          Approve to continue Apply.
+          timeoutInMinutes: 1440
+
+# ---------------- APPLY ----------------
+- stage: Apply
+  displayName: Apply
+  dependsOn: ManualApproval
+  condition: succeeded()
+  jobs:
+  - job: TerraformApply
+    steps:
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: 'latest'
+
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: azurerm
+        command: init
+        workingDirectory: $(TF_WORKING_DIR)
+        backendServiceArm: Monolithic-serviceconnection01
+        backendAzureRmResourceGroupName: home1239
+        backendAzureRmStorageAccountName: homestg1239
+        backendAzureRmContainerName: hello
+        backendAzureRmKey: new.terraform.tfstate
+
+    - task: TerraformTask@5
+      displayName: Terraform Apply
+      inputs:
+        provider: azurerm
+        command: apply
+        workingDirectory: $(TF_WORKING_DIR)
+        environmentServiceNameAzureRM: Monolithic-serviceconnection01
+        commandOptions: '-auto-approve -var-file=terraform.tfvars'
+
