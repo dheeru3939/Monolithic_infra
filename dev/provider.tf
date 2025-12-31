@@ -6,15 +6,13 @@ terraform {
     }
   }
   backend "azurerm" {
-    resource_group_name  = "RG-dhgroup39"
-    storage_account_name = "devstg3912"
-    container_name       = "devcontainer3912"
-    key                  = "dev3912key.tfstate"
+    resource_group_name  = "home1239"
+    storage_account_name = "homestg1239"
+    container_name       = "hello"
+    key                  = "new.terraform.tfstate"
   }
 
 }
-
-
 
 provider "azurerm" {
   features {}
