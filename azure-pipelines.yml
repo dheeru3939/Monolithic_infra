@@ -26,7 +26,7 @@ stages:
         provider: azurerm
         command: init
         workingDirectory: $(TF_WORKING_DIR)
-        backendServiceArm: Monolithic-serviceconnection01
+        backendServiceArm: Monolithic_APPRegistration-serviceconnection01
         backendAzureRmResourceGroupName: home1239
         backendAzureRmStorageAccountName: homestg1239
         backendAzureRmContainerName: hello
@@ -45,7 +45,7 @@ stages:
         provider: azurerm
         command: plan
         workingDirectory: $(TF_WORKING_DIR)
-        environmentServiceNameAzureRM: Monolithic-serviceconnection01
+        environmentServiceNameAzureRM: Monolithic_APPRegistration-serviceconnection01
         commandOptions: '-out=tfplan -refresh=false -parallelism=20 -var-file=terraform.tfvars'
 
 # ---------------- SCANNING ----------------
@@ -119,7 +119,7 @@ stages:
         provider: azurerm
         command: init
         workingDirectory: $(TF_WORKING_DIR)
-        backendServiceArm: Monolithic-serviceconnection01
+        backendServiceArm: Monolithic_APPRegistration-serviceconnection01
         backendAzureRmResourceGroupName: home1239
         backendAzureRmStorageAccountName: homestg1239
         backendAzureRmContainerName: hello
@@ -131,5 +131,5 @@ stages:
         provider: azurerm
         command: apply
         workingDirectory: $(TF_WORKING_DIR)
-        environmentServiceNameAzureRM: Monolithic-serviceconnection01
+        environmentServiceNameAzureRM: Monolithic_APPRegistration-serviceconnection01
         commandOptions: '-auto-approve -var-file=terraform.tfvars'
